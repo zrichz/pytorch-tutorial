@@ -5,7 +5,6 @@ import torch.nn as nn
 from torchvision import transforms
 from torchvision.utils import save_image
 
-
 # Device configuration
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -121,7 +120,16 @@ for epoch in range(num_epochs):
         outputs = D(fake_images)
         
         # We train G to maximize log(D(G(z)) instead of minimizing log(1-D(G(z)))
-        # For the reason, see the last paragraph of section 3. https://arxiv.org/pdf/1406.2661.pdf
+        # For the reason why, see below the last paragraph of section 3. https://arxiv.org/pdf/1406.2661.pdf:
+        
+        '''In practice, equation 1 may not provide sufficient gradient for G to learn well.
+           Early in learning, when G is poor, D can reject samples with high confidence because they are clearly different from
+           the training data. In this case, log(1 − D(G(z))) saturates.
+           
+           Rather than training G to minimize log(1 − D(G(z))) we can train G to maximize log D(G(z)).
+           This objective function results in the same fixed point of the dynamics of G and D,
+           but provides much stronger gradients early in learning.'''
+        
         g_loss = criterion(outputs, real_labels)
         
         # Backprop and optimize
